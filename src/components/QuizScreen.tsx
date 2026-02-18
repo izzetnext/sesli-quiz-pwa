@@ -30,7 +30,7 @@ export const QuizScreen = () => {
         }, 100);
     };
 
-    // 1. Reset state and start flow when question changes
+    // 1. Reset state when question changes (BUT DO NOT AUTO-START)
     useEffect(() => {
         if (!currentQuestion) return;
 
@@ -45,25 +45,25 @@ export const QuizScreen = () => {
         cancel();
         stopListening();
 
-        // Start with a small delay for better UX
-        const timer = setTimeout(() => {
-            console.log("Starting TTS for question");
-            speakText(currentQuestion.question, () => {
-                console.log("TTS finished, attempting to start STT");
-                // Once speaking finishes, start listening
-                // Only if we haven't processed (e.g. user didn't leave)
-                if (!processedRef.current) {
-                    startListening();
-                }
-            });
-        }, 500);
-
-        return () => {
-            clearTimeout(timer);
-            cancel();
-            stopListening();
-        };
+        // NO AUTO START - User must click
     }, [currentQuestionIndex]); // Dependency on index implies new question
+
+    // Manual start function
+    const handleManualStart = () => {
+        if (speaking || listening) return; // Prevent double click
+
+        console.log("Manual start triggered");
+        speakText(currentQuestion!.question, () => {
+            console.log("TTS finished, attempting to start STT");
+            if (!processedRef.current) {
+                // Determine if we need to reset transcript? 
+                // Creating a clean slate for the answer is usually better per question
+                // But user asked to keep appending? Let's keep the hook's behavior but maybe clear on new question?
+                // The hook clears on startListening call usually.
+                startListening();
+            }
+        });
+    };
 
     // 2. Evaluate ONLY when listening stops (meaning silence timer fired or user manually stopped)
     useEffect(() => {
@@ -136,30 +136,33 @@ export const QuizScreen = () => {
                 </div>
 
                 <div className="flex flex-col items-center space-y-8 w-full">
-                    <div className="relative" onClick={startListening} title="Mikrofonu manuel başlatmak için tıklayın">
+                    <div className="relative" title="Mikrofonu manuel başlatmak için tıklayın">
                         <MicIndicator listening={listening} />
                     </div>
 
-                    <div className="text-center h-20 w-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-xl p-4 shadow-inner">
-                        <p className="text-2xl text-gray-600 dark:text-gray-300 font-medium">
-                            {transcript ? `"${transcript}"` : (listening ? "..." : (error ? `Hata: ${error}. Tekrar deneyin.` : "Hazırlanıyor..."))}
+                    <div className="text-center h-32 w-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-xl p-4 shadow-inner overflow-y-auto">
+                        <p className="text-xl text-gray-600 dark:text-gray-300 font-medium whitespace-pre-wrap">
+                            {/* Display accumulated final transcript PLUS current interim */}
+                            {(finalTranscript || transcript) ?
+                                `${finalTranscript} ${transcript}` :
+                                (listening ? "Dinliyor..." : (error ? `Hata: ${error}` : "Başlamak için butona basın 👇"))}
                         </p>
                     </div>
 
-                    {/* Controls for manual override/skip if needed? Not in requirements but helpful */}
+                    {/* Controls */}
                     <div className="flex space-x-4">
-                        {listening ? (
-                            <button onClick={() => stopListening()} className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition animate-pulse">
-                                Durdur ve Gönder ⏹️
+                        {listening || speaking ? (
+                            <button onClick={() => stopListening()} className="px-6 py-3 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition animate-pulse font-bold">
+                                {speaking ? "Okumayı Durdur" : "Cevabı Gönder ⏹️"}
                             </button>
                         ) : (
-                            <button onClick={() => { processedRef.current = false; startListening(); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-                                Dinlemeyi Başlat 🎤
+                            <button onClick={handleManualStart} className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition font-bold text-lg">
+                                Soruyu Oku & Başlat 🎤
                             </button>
                         )}
 
-                        <button onClick={nextQuestion} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                            Soruyu Atla ⏭️
+                        <button onClick={nextQuestion} className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                            Atla ⏭️
                         </button>
                     </div>
                 </div>

@@ -49,7 +49,7 @@ export const HomeScreen = () => {
                     Sesli Quiz
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400">Sesli etkileşimli bilgi yarışması</p>
-                <p className="text-xs text-gray-400 mt-2">v1.0.4 (5s Silence + Stop Btn + Retry)</p>
+                <p className="text-xs text-gray-400 mt-2">v1.0.5 (Manual Flow + Text Accumulate)</p>
                 {trVoices.length > 0 ?
                     <p className="text-xs text-green-500">✅ {trVoices.length} Türkçe Ses Bulundu ({trVoices[0].name})</p> :
                     <p className="text-xs text-red-500">⚠️ Türkçe Ses Bekleniyor... (Sayfayı yenileyin)</p>
