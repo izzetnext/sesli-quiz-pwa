@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuiz } from '../context/QuizContext';
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import type { QuizData } from '../types/quiz';
 import sampleData from '../assets/sample.json';
 
@@ -36,6 +37,11 @@ export const HomeScreen = () => {
         dispatch({ type: 'START_QUIZ' });
     }
 
+    const { voices } = useSpeechSynthesis();
+
+    // Debug info for voices
+    const trVoices = voices.filter(v => v.lang.includes('tr') || v.lang.includes('TK'));
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4 space-y-8 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
             <div className="text-center space-y-2">
@@ -43,7 +49,11 @@ export const HomeScreen = () => {
                     Sesli Quiz
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400">Sesli etkileşimli bilgi yarışması</p>
-                <p className="text-xs text-gray-400 mt-2">v1.0.2 (Google Voice + Silence Fix)</p>
+                <p className="text-xs text-gray-400 mt-2">v1.0.3 (Fix: Cutoff & Voice Wait)</p>
+                {trVoices.length > 0 ?
+                    <p className="text-xs text-green-500">✅ {trVoices.length} Türkçe Ses Bulundu ({trVoices[0].name})</p> :
+                    <p className="text-xs text-red-500">⚠️ Türkçe Ses Bekleniyor... (Sayfayı yenileyin)</p>
+                }
             </div>
 
             {!quizData ? (

@@ -65,13 +65,17 @@ export const QuizScreen = () => {
         };
     }, [currentQuestionIndex]); // Dependency on index implies new question
 
-    // 2. Evaluate when final transcript is received
+    // 2. Evaluate ONLY when listening stops (meaning silence timer fired or user manually stopped)
     useEffect(() => {
-        // Evaluate only if we have a result and haven't processed this question yet
-        if (finalTranscript && !processedRef.current) {
+        // If we stopped listening and have a final transcript, evaluate it
+        if (!listening && finalTranscript && !processedRef.current) {
+            console.log("Listening stopped with transcript, evaluating...");
             evaluateAnswer(finalTranscript);
         }
-    }, [finalTranscript]);
+    }, [listening, finalTranscript]);
+
+    // Removed the previous useEffect that triggered on finalTranscript change
+    // preventing premature evaluation.
 
     const evaluateAnswer = (text: string) => {
         if (!currentQuestion) return;

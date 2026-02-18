@@ -66,5 +66,5 @@ export const useSpeechSynthesis = () => {
         }
     }, [supported]);
 
-    return { speak, cancel, speaking, supported };
+    return { speak, cancel, speaking, supported, voices };
 };
