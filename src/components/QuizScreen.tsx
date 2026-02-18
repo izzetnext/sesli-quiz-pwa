@@ -148,9 +148,16 @@ export const QuizScreen = () => {
 
                     {/* Controls for manual override/skip if needed? Not in requirements but helpful */}
                     <div className="flex space-x-4">
-                        <button onClick={() => { processedRef.current = false; startListening(); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
-                            Dinlemeyi Başlat 🎤
-                        </button>
+                        {listening ? (
+                            <button onClick={() => stopListening()} className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition animate-pulse">
+                                Durdur ve Gönder ⏹️
+                            </button>
+                        ) : (
+                            <button onClick={() => { processedRef.current = false; startListening(); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+                                Dinlemeyi Başlat 🎤
+                            </button>
+                        )}
+
                         <button onClick={nextQuestion} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                             Soruyu Atla ⏭️
                         </button>

@@ -44,11 +44,11 @@ export const useSpeechRecognition = () => {
         const resetSilenceTimer = () => {
             if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
 
-            // Wait 2 seconds of silence before stopping
+            // Wait 5 seconds of silence before stopping (User request)
             silenceTimerRef.current = setTimeout(() => {
-                console.log("Silence detected (2s), stopping...");
+                console.log("Silence detected (5s), stopping...");
                 recognition.stop();
-            }, 2000);
+            }, 5000);
         };
 
         recognition.onstart = () => {

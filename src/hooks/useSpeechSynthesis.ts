@@ -29,34 +29,49 @@ export const useSpeechSynthesis = () => {
 
         window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'tr-TR';
-        utterance.rate = 1.0; // Slightly faster/normal
-        utterance.pitch = 1;
+        // Recursively retry if voices are not loaded yet (max 3 retries)
+        const trySpeak = (retries = 3) => {
+            const currentVoices = window.speechSynthesis.getVoices();
 
-        // Smart voice selection
-        const trVoices = voices.filter(v => v.lang.includes('tr') || v.lang.includes('TK'));
-        // Prioritize Google, then Microsoft, then others
-        const preferredVoice = trVoices.find(v => v.name.includes('Google')) ||
-            trVoices.find(v => v.name.includes('Yelda')) ||
-            trVoices[0];
+            if (currentVoices.length === 0 && retries > 0) {
+                console.log("Voices not loaded yet, retrying...", retries);
+                setTimeout(() => trySpeak(retries - 1), 500);
+                return;
+            }
 
-        if (preferredVoice) {
-            utterance.voice = preferredVoice;
-            // console.log("Using voice:", preferredVoice.name);
-        }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'tr-TR';
+            utterance.rate = 1.0;
+            utterance.pitch = 1;
 
-        utterance.onstart = () => setSpeaking(true);
-        utterance.onend = () => {
-            setSpeaking(false);
-            if (onEnd) onEnd();
+            // Smart voice selection
+            const trVoices = currentVoices.filter(v => v.lang.includes('tr') || v.lang.includes('TK'));
+            // Prioritize Google, then Microsoft, then others
+            const preferredVoice = trVoices.find(v => v.name.includes('Google')) ||
+                trVoices.find(v => v.name.includes('Yelda')) ||
+                trVoices[0];
+
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+                // console.log("Using voice:", preferredVoice.name);
+            }
+
+            utterance.onstart = () => setSpeaking(true);
+            utterance.onend = () => {
+                setSpeaking(false);
+                if (onEnd) onEnd();
+            };
+            utterance.onerror = (e) => {
+                console.error('Speech synthesis error:', e);
+                setSpeaking(false);
+                // Even on error, we might want to trigger onEnd to continue flow?
+                if (onEnd) onEnd();
+            };
+
+            window.speechSynthesis.speak(utterance);
         };
-        utterance.onerror = (e) => {
-            console.error('Speech synthesis error:', e);
-            setSpeaking(false);
-        };
 
-        window.speechSynthesis.speak(utterance);
+        trySpeak();
     }, [supported]);
 
     const cancel = useCallback(() => {
