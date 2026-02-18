@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/sesli-quiz-pwa/sw.js', { scope: '/sesli-quiz-pwa/' })})}
