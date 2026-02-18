@@ -14,7 +14,7 @@ export const QuizScreen = () => {
     const currentQuestion = quizData?.questions[currentQuestionIndex];
 
     const { speak, cancel } = useSpeechSynthesis();
-    const { startListening, stopListening, listening, transcript, finalTranscript } = useSpeechRecognition();
+    const { startListening, stopListening, listening, transcript, finalTranscript, error } = useSpeechRecognition();
 
     const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
     const [showOverlay, setShowOverlay] = useState(false);
@@ -34,6 +34,8 @@ export const QuizScreen = () => {
     useEffect(() => {
         if (!currentQuestion) return;
 
+        console.log("New question loaded:", currentQuestion.id);
+
         // Reset local state
         setFeedback('idle');
         setShowOverlay(false);
@@ -45,7 +47,9 @@ export const QuizScreen = () => {
 
         // Start with a small delay for better UX
         const timer = setTimeout(() => {
+            console.log("Starting TTS for question");
             speakText(currentQuestion.question, () => {
+                console.log("TTS finished, attempting to start STT");
                 // Once speaking finishes, start listening
                 // Only if we haven't processed (e.g. user didn't leave)
                 if (!processedRef.current) {
@@ -125,18 +129,25 @@ export const QuizScreen = () => {
                 </div>
 
                 <div className="flex flex-col items-center space-y-8 w-full">
-                    <div className="relative">
+                    <div className="relative" onClick={startListening} title="Mikrofonu manuel başlatmak için tıklayın">
                         <MicIndicator listening={listening} />
                     </div>
 
                     <div className="text-center h-20 w-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-xl p-4 shadow-inner">
                         <p className="text-2xl text-gray-600 dark:text-gray-300 font-medium">
-                            {transcript ? `"${transcript}"` : (listening ? "..." : "")}
+                            {transcript ? `"${transcript}"` : (listening ? "..." : (error ? `Hata: ${error}. Tekrar deneyin.` : "Hazırlanıyor..."))}
                         </p>
                     </div>
 
                     {/* Controls for manual override/skip if needed? Not in requirements but helpful */}
-                    {/* <button onClick={nextQuestion} className="text-sm text-gray-400">Atla</button> */}
+                    <div className="flex space-x-4">
+                        <button onClick={startListening} className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+                            Dinlemeyi Başlat 🎤
+                        </button>
+                        <button onClick={nextQuestion} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                            Soruyu Atla ⏭️
+                        </button>
+                    </div>
                 </div>
             </div>
 

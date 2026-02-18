@@ -5,6 +5,7 @@ export const useSpeechRecognition = () => {
     const [transcript, setTranscript] = useState('');
     const [finalTranscript, setFinalTranscript] = useState('');
     const [supported, setSupported] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const recognitionRef = useRef<any>(null);
 
     useEffect(() => {
@@ -33,7 +34,14 @@ export const useSpeechRecognition = () => {
         setFinalTranscript('');
         setListening(true);
 
+        recognition.onstart = () => {
+            console.log("Speech recognition started");
+            setListening(true);
+            setError(null);
+        };
+
         recognition.onresult = (event: any) => {
+            console.log("Speech recognition result received");
             let interim = '';
             let final = '';
 
@@ -49,26 +57,31 @@ export const useSpeechRecognition = () => {
             if (interim) setTranscript(interim);
             if (final) {
                 setFinalTranscript(final);
+                console.log("Final transcript:", final);
                 // If final is received, we can theoretically stop, but onspeechend handles it
             }
         };
 
         recognition.onspeechend = () => {
+            console.log("Speech recognition ended (speech end)");
             recognition.stop();
             setListening(false);
         };
 
         recognition.onend = () => {
+            console.log("Speech recognition ended (session end)");
             setListening(false);
         };
 
         recognition.onerror = (event: any) => {
             console.error('Speech recognition error', event.error);
+            setError(event.error);
             setListening(false);
         };
 
         try {
             recognition.start();
+            console.log("Speech recognition start called");
         } catch (e) {
             console.error('Failed to start recognition', e);
             setListening(false);
@@ -89,5 +102,6 @@ export const useSpeechRecognition = () => {
         startListening,
         stopListening,
         supported,
+        error, // Export error
     };
 };

@@ -43,6 +43,7 @@ export const HomeScreen = () => {
                     Sesli Quiz
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400">Sesli etkileşimli bilgi yarışması</p>
+                <p className="text-xs text-gray-400 mt-2">v1.0.1</p>
             </div>
 
             {!quizData ? (
