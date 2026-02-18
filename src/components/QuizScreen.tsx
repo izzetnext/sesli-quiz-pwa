@@ -76,11 +76,15 @@ export const QuizScreen = () => {
     const evaluateAnswer = (text: string) => {
         if (!currentQuestion) return;
 
-        stopListening(); // Stop mic immediately
-        processedRef.current = true; // Mark as processed to prevent duplicate calls
+        // Trim and clean
+        const cleanedText = text.trim();
+        if (!cleanedText) return;
 
-        console.log("User said:", text);
-        const normalizedInput = normalizeAnswer(text);
+        stopListening(); // Stop mic immediately
+        processedRef.current = true; // Mark as processed
+
+        console.log("User said (Final):", cleanedText);
+        const normalizedInput = normalizeAnswer(cleanedText);
         const normalizedAnswer = normalizeAnswer(currentQuestion.answer);
 
         console.log("Comp:", normalizedInput, "vs", normalizedAnswer);
@@ -99,7 +103,6 @@ export const QuizScreen = () => {
         // Provide Audio Feedback
         if (isCorrect) {
             speakText("Doğru!", () => {
-                // Wait a bit then next
                 setTimeout(nextQuestion, 1000);
             });
         } else {
@@ -141,7 +144,7 @@ export const QuizScreen = () => {
 
                     {/* Controls for manual override/skip if needed? Not in requirements but helpful */}
                     <div className="flex space-x-4">
-                        <button onClick={startListening} className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+                        <button onClick={() => { processedRef.current = false; startListening(); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
                             Dinlemeyi Başlat 🎤
                         </button>
                         <button onClick={nextQuestion} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">

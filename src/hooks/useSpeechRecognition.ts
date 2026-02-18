@@ -8,6 +8,8 @@ export const useSpeechRecognition = () => {
     const [error, setError] = useState<string | null>(null);
     const recognitionRef = useRef<any>(null);
 
+    const silenceTimerRef = useRef<any>(null);
+
     useEffect(() => {
         if (
             typeof window !== 'undefined' &&
@@ -17,15 +19,20 @@ export const useSpeechRecognition = () => {
         }
     }, []);
 
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+        };
+    }, []);
+
     const startListening = useCallback(() => {
         if (!supported) return;
 
-        // Re-initialize to ensure fresh state or handle if stopped
-        const SpeechRecognition =
-            window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.lang = 'tr-TR';
-        recognition.continuous = false;
+        recognition.continuous = true; // CHANGED: Keep listening
         recognition.interimResults = true;
 
         recognitionRef.current = recognition;
@@ -34,14 +41,26 @@ export const useSpeechRecognition = () => {
         setFinalTranscript('');
         setListening(true);
 
+        const resetSilenceTimer = () => {
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+
+            // Wait 2 seconds of silence before stopping
+            silenceTimerRef.current = setTimeout(() => {
+                console.log("Silence detected (2s), stopping...");
+                recognition.stop();
+            }, 2000);
+        };
+
         recognition.onstart = () => {
             console.log("Speech recognition started");
             setListening(true);
             setError(null);
+            resetSilenceTimer(); // Start timer initially
         };
 
         recognition.onresult = (event: any) => {
-            console.log("Speech recognition result received");
+            resetSilenceTimer(); // Reset timer on any speech
+
             let interim = '';
             let final = '';
 
@@ -56,27 +75,31 @@ export const useSpeechRecognition = () => {
 
             if (interim) setTranscript(interim);
             if (final) {
-                setFinalTranscript(final);
-                console.log("Final transcript:", final);
-                // If final is received, we can theoretically stop, but onspeechend handles it
+                // If we get a final result, we update but DON'T stop immediately
+                // We let the silence timer handle the stop
+                setFinalTranscript(prev => prev + " " + final); // Append if multiple segments
             }
         };
 
         recognition.onspeechend = () => {
-            console.log("Speech recognition ended (speech end)");
-            recognition.stop();
-            setListening(false);
+            // In continuous mode, this might not fire until we stop, or it fires on pause
+            // We rely more on silence timer, but if browser forces end:
+            console.log("Speech end detected by browser");
         };
 
         recognition.onend = () => {
             console.log("Speech recognition ended (session end)");
             setListening(false);
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         };
 
         recognition.onerror = (event: any) => {
             console.error('Speech recognition error', event.error);
-            setError(event.error);
-            setListening(false);
+            // Ignore 'no-speech' errors if we want to keep trying, or handle gracefully
+            if (event.error !== 'no-speech') {
+                setError(event.error);
+            }
+            // recognition.stop(); // Don't always stop on error?
         };
 
         try {
@@ -89,9 +112,10 @@ export const useSpeechRecognition = () => {
     }, [supported]);
 
     const stopListening = useCallback(() => {
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         if (recognitionRef.current) {
             recognitionRef.current.stop();
-            setListening(false);
+            // setListening(false); // onend will handle this
         }
     }, []);
 
@@ -102,6 +126,6 @@ export const useSpeechRecognition = () => {
         startListening,
         stopListening,
         supported,
-        error, // Export error
+        error,
     };
 };
