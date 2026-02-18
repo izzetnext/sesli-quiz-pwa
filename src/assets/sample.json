@@ -1,0 +1,36 @@
+{
+    "quiz_title": "Dünya Başkentleri Bilgi Yarışması",
+    "description": "Bakalım ülkelerin başkentlerini ne kadar iyi biliyorsun?",
+    "questions": [
+        {
+            "id": 1,
+            "category": "Coğrafya",
+            "question": "Türkiye'nin başkenti neresidir?",
+            "answer": "Ankara"
+        },
+        {
+            "id": 2,
+            "category": "Coğrafya",
+            "question": "Fransa'nın başkenti neresidir?",
+            "answer": "Paris"
+        },
+        {
+            "id": 3,
+            "category": "Coğrafya",
+            "question": "İngiltere'nin başkenti neresidir?",
+            "answer": "Londra"
+        },
+        {
+            "id": 4,
+            "category": "Coğrafya",
+            "question": "Almanya'nın başkenti neresidir?",
+            "answer": "Berlin"
+        },
+        {
+            "id": 5,
+            "category": "Coğrafya",
+            "question": "Japonya'nın başkenti neresidir?",
+            "answer": "Tokyo"
+        }
+    ]
+}
