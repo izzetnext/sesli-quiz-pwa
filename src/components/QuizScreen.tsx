@@ -13,7 +13,7 @@ export const QuizScreen = () => {
     const { quizData, currentQuestionIndex } = state;
     const currentQuestion = quizData?.questions[currentQuestionIndex];
 
-    const { speak, cancel } = useSpeechSynthesis();
+    const { speak, cancel, speaking } = useSpeechSynthesis();
     const { startListening, stopListening, listening, transcript, finalTranscript, error } = useSpeechRecognition();
 
     const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
